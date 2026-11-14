@@ -4,115 +4,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111111">
-  <title>PRINTCORE | Posters That Make a Statement</title>
+  <meta name="theme-color" content="#101010">
+  <title>PRINTCORE | Premium Wall Posters</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="header">
-  <a class="logo" href="index.html">PRINT<span>CORE.</span></a>
+<header class="site-header">
+  <a class="logo" href="index.html">PRINT<span>CORE</span></a>
 
-  <nav class="nav">
+  <nav class="desktop-nav">
     <a href="#home">Home</a>
-    <a href="#categories">Categories</a>
     <a href="#products">Shop</a>
+    <a href="#about">About</a>
   </nav>
 
-  <div class="header-actions">
-    <a class="admin-link" href="admin.html">ADMIN</a>
-    <button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button>
-  </div>
+  <a href="admin.html" class="admin-link">ADMIN</a>
 </header>
-
-<div class="mobile-menu" id="mobileMenu">
-  <a href="#home">Home</a>
-  <a href="#categories">Categories</a>
-  <a href="#products">Shop</a>
-</div>
 
 <main>
   <section class="hero" id="home">
     <div class="hero-content">
-      <p class="eyebrow">ART FOR YOUR WALLS</p>
-      <h1>MAKE YOUR<br><span>WALLS SPEAK.</span></h1>
-      <p class="hero-description">
-        Premium posters for car lovers, art lovers and everyone
-        who wants something different.
-      </p>
-      <a class="primary-btn" href="#products">EXPLORE COLLECTION <span>↗</span></a>
+      <span class="eyebrow">YOUR WALL. YOUR STYLE.</span>
+      <h1>MAKE YOUR<br><span>WALLS ICONIC.</span></h1>
+      <p>Premium posters for people who love extraordinary designs.</p>
+      <a href="#products" class="primary-btn">EXPLORE COLLECTION <span>→</span></a>
     </div>
-    <div class="hero-art">
-      <div class="hero-tag">PRINTCORE<br>COLLECTION 01</div>
-      <div class="hero-circle">PC.</div>
-      <div class="hero-bottom">YOUR WALL. YOUR STYLE.</div>
-    </div>
+    <div class="hero-decoration">PC.</div>
   </section>
 
-  <section class="categories section" id="categories">
+  <section class="category-section">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">FIND YOUR STYLE</p>
+        <span class="eyebrow">FIND YOUR STYLE</span>
         <h2>SHOP BY CATEGORY</h2>
       </div>
     </div>
-
-    <div class="category-grid">
-      <button class="category-card" data-category="Car Posters">
-        <span>01</span><strong>CAR POSTERS</strong><small>For automotive enthusiasts ↗</small>
-      </button>
-      <button class="category-card" data-category="Wall Posters">
-        <span>02</span><strong>WALL POSTERS</strong><small>Make your space unique ↗</small>
-      </button>
-      <button class="category-card" data-category="Bike Posters">
-        <span>03</span><strong>BIKE POSTERS</strong><small>Two-wheel passion ↗</small>
-      </button>
-      <button class="category-card" data-category="Movie Posters">
-        <span>04</span><strong>MOVIE POSTERS</strong><small>Bring cinema home ↗</small>
-      </button>
-      <button class="category-card" data-category="Custom Posters">
-        <span>05</span><strong>CUSTOM POSTERS</strong><small>Your idea, our print ↗</small>
-      </button>
+    <div class="category-list" id="categoryList">
+      <button class="category-chip active" data-category="All">All Posters</button>
+      <button class="category-chip" data-category="Car Posters">Car Posters</button>
+      <button class="category-chip" data-category="Bike Posters">Bike Posters</button>
+      <button class="category-chip" data-category="Movie Posters">Movie Posters</button>
+      <button class="category-chip" data-category="Wall Posters">Wall Posters</button>
+      <button class="category-chip" data-category="Custom Posters">Custom Posters</button>
     </div>
   </section>
 
-  <section class="products-section section" id="products">
+  <section class="products-section" id="products">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">THE PRINTCORE COLLECTION</p>
-        <h2>FIND YOUR NEXT FAVOURITE.</h2>
+        <span class="eyebrow">THE PRINTCORE COLLECTION</span>
+        <h2>OUR PRODUCTS<span class="orange-dot">.</span></h2>
       </div>
-      <span class="product-count" id="productCount">Loading products...</span>
+      <span id="productCount" class="product-count"></span>
     </div>
 
-    <div class="shop-controls">
-      <input id="searchInput" type="search" placeholder="Search posters..." aria-label="Search products">
-      <select id="categoryFilter" aria-label="Filter category">
-        <option value="all">All categories</option>
-        <option>Car Posters</option>
-        <option>Wall Posters</option>
-        <option>Bike Posters</option>
-        <option>Movie Posters</option>
-        <option>Custom Posters</option>
-      </select>
+    <div class="search-wrap">
+      <span>⌕</span>
+      <input type="search" id="searchInput" placeholder="Search posters...">
     </div>
 
-    <div class="product-grid" id="productGrid">
-      <div class="loading">Loading the collection...</div>
+    <div id="productGrid" class="product-grid">
+      <div class="loading-message">Loading our collection...</div>
     </div>
   </section>
 
-  <section class="banner">
-    <p class="eyebrow">YOUR SPACE. YOUR PERSONALITY.</p>
-    <h2>DON'T LEAVE<br>YOUR WALLS EMPTY.</h2>
-    <a href="#products" class="primary-btn">SHOP PRINTCORE ↗</a>
+  <section class="about-section" id="about">
+    <span class="eyebrow">ABOUT PRINTCORE</span>
+    <h2>TURN EMPTY WALLS<br>INTO <span>STATEMENTS.</span></h2>
+    <p>Discover poster designs inspired by cars, bikes, movies and everything you love.</p>
   </section>
 </main>
 
-<footer class="footer">
-  <a class="logo" href="#home">PRINT<span>CORE.</span></a>
-  <p>POSTERS THAT MAKE A STATEMENT.</p>
-  <small>© <span id="year"></span> PRINTCORE. All rights reserved.</small>
+<footer class="site-footer">
+  <a class="logo" href="index.html">PRINT<span>CORE</span></a>
+  <p>© 2026 PRINTCORE. All rights reserved.</p>
 </footer>
 
 <script type="module" src="store.js"></script>
