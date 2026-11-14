@@ -200,9 +200,34 @@ button, input, select { font: inherit; }
   border-color: var(--orange);
 }
 .product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.product-image {
+  aspect-ratio: 4 / 5;
+}
+
+.product-info {
+  padding: 20px;
+}
+
+.product-info h3 {
+  font-size: 19px;
+}
+
+.product-description {
+  font-size: 14px;
+  min-height: auto;
+}
+
+.product-price {
+  font-size: 22px;
+}
+
+.buy-btn {
+  padding: 16px;
+  font-size: 13px;
 }
 .product-card {
   background: white;
