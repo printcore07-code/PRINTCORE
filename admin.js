@@ -1,26 +1,22 @@
 
+import { createClient } from
+  "https://esm.sh/@supabase/supabase-js@2";
+
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 
-import {
-  createClient
-} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const $ = id => document.getElementById(id);
 
-let editingProduct = null;
 let currentProducts = [];
 
-// Display messages
-function message(id, text, error = false) {
-  $(id).textContent = text;
-  $(id).style.color = error ? "#bd3434" : "#21834b";
+function showMessage(id, message, isError = false) {
+  $(id).textContent = message;
+  $(id).style.color = isError ? "#ff7777" : "#ff782b";
 }
 
-// Protect displayed text
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -29,12 +25,31 @@ function escapeHTML(value) {
   })[char]);
 }
 
-// Upload product image to Supabase
+function showDashboard() {
+  $("loginSection").hidden = true;
+  $("dashboard").hidden = false;
+}
+
+function showLogin() {
+  $("loginSection").hidden = false;
+  $("dashboard").hidden = true;
+}
+
+async function isAdmin(userId) {
+  const { data, error } = await supabase
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return !error && !!data;
+}
+
 async function uploadProductImage(file) {
   if (!file) return null;
 
   if (!file.type.startsWith("image/")) {
-    throw new Error("Please select a valid image.");
+    throw new Error("Please select an image file.");
   }
 
   if (file.size > 5 * 1024 * 1024) {
@@ -42,255 +57,149 @@ async function uploadProductImage(file) {
   }
 
   const extension = file.name.split(".").pop().toLowerCase();
-  const path = `${crypto.randomUUID()}.${extension}`;
+  const safeExtension = /^[a-z0-9]+$/.test(extension)
+    ? extension
+    : "jpg";
 
-  const { error } = await db.storage
+  const filePath =
+    `${crypto.randomUUID()}.${safeExtension}`;
+
+  const { error } = await supabase.storage
     .from("product-images")
-    .upload(path, file);
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
 
   if (error) throw error;
 
-  const { data } = db.storage
+  const { data } = supabase.storage
     .from("product-images")
-    .getPublicUrl(path);
+    .getPublicUrl(filePath);
 
   return data.publicUrl;
 }
 
-// Check admin login
-async function checkAdmin() {
-  const { data: { session } } = await db.auth.getSession();
-
-  if (!session) {
-    showLogin();
-    return;
-  }
-
-  const { data, error } = await db
-    .from("admins")
-    .select("user_id")
-    .eq("user_id", session.user.id)
-    .maybeSingle();
-
-  if (error || !data) {
-    await db.auth.signOut();
-    showLogin();
-
-    message(
-      "loginMessage",
-      "This account is not authorised as a store admin.",
-      true
-    );
-
-    return;
-  }
-
-  await showDashboard();
-}
-
-// Show login page
-function showLogin() {
-  $("loginSection").classList.remove("hidden");
-  $("dashboard").classList.add("hidden");
-}
-
-// Show admin dashboard
-async function showDashboard() {
-  $("loginSection").classList.add("hidden");
-  $("dashboard").classList.remove("hidden");
-
-  await loadSettings();
-  await loadAdminProducts();
-}
-
-// Admin login
-$("loginForm").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  message("loginMessage", "Checking login...");
-
-  const { error } = await db.auth.signInWithPassword({
-    email: $("email").value.trim(),
-    password: $("password").value
-  });
-
-  if (error) {
-    message("loginMessage", error.message, true);
-    return;
-  }
-
-  await checkAdmin();
-});
-
-// Logout
-$("logoutButton").addEventListener("click", async () => {
-  await db.auth.signOut();
-  location.reload();
-});
-
-// Load WhatsApp number
 async function loadSettings() {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("store_settings")
     .select("whatsapp_number")
     .eq("id", 1)
     .maybeSingle();
 
   if (error) {
-    message("settingsMessage", error.message, true);
+    showMessage("settingsMessage", error.message, true);
     return;
   }
 
   $("whatsappNumber").value = data?.whatsapp_number || "";
 }
 
-// Save WhatsApp number
 $("settingsForm").addEventListener("submit", async event => {
   event.preventDefault();
 
-  const number = $("whatsappNumber").value.replace(/\D/g, "");
+  const number = $("whatsappNumber").value.trim();
 
-  if (!/^\d{10,15}$/.test(number)) {
-    message(
-      "settingsMessage",
-      "Enter a valid number with country code.",
-      true
-    );
+  if (!number) {
+    showMessage("settingsMessage", "Enter a WhatsApp number.", true);
     return;
   }
 
-  const { error } = await db
+  const cleanNumber = number.replace(/\D/g, "");
+
+  if (cleanNumber.length < 10) {
+    showMessage("settingsMessage", "Enter a valid number with country code.", true);
+    return;
+  }
+
+  showMessage("settingsMessage", "Saving...");
+
+  const { error } = await supabase
     .from("store_settings")
     .upsert({
       id: 1,
-      whatsapp_number: number,
+      whatsapp_number: cleanNumber,
       updated_at: new Date().toISOString()
     }, {
       onConflict: "id"
     });
 
   if (error) {
-    message("settingsMessage", error.message, true);
-    return;
+    showMessage("settingsMessage", error.message, true);
+  } else {
+    showMessage("settingsMessage", "WhatsApp number saved successfully!");
   }
-
-  message("settingsMessage", "WhatsApp number saved successfully!");
 });
 
-// Load all products
 async function loadAdminProducts() {
   $("adminProductList").textContent = "Loading products...";
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("products")
     .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {
-    $("adminProductList").textContent =
-      "Unable to load products: " + error.message;
+    $("adminProductList").textContent = error.message;
     return;
   }
 
   currentProducts = data || [];
 
   if (!currentProducts.length) {
-    $("adminProductList").textContent = "No products added yet.";
+    $("adminProductList").innerHTML =
+      '<p class="product-description">No products added yet.</p>';
     return;
   }
 
   $("adminProductList").innerHTML = currentProducts.map(product => `
-    <div class="admin-product">
-
+    <article class="admin-product">
       <img
         src="${escapeHTML(product.image_url || "")}"
-        alt=""
-        onerror="this.style.visibility='hidden'"
+        alt="${escapeHTML(product.name)}"
       >
 
-      <div class="admin-product-info">
+      <div class="admin-product-details">
         <strong>${escapeHTML(product.name)}</strong>
-
-        <small>
-          ₹${Number(product.price).toLocaleString("en-IN")}
-          · ${escapeHTML(product.category || "Wall Posters")}
-          · ${product.is_active ? "Active" : "Hidden"}
-        </small>
-
-        <small>
-          Images:
-          ${[
-            product.image_url,
-            product.image_url_2,
-            product.image_url_3
-          ].filter(Boolean).length}/3
-        </small>
+        <p>₹${Number(product.price).toLocaleString("en-IN")}</p>
+        <p>${escapeHTML(product.category || "Wall Posters")}</p>
+        <p>${product.is_active ? "Visible on website" : "Hidden from website"}</p>
+        <p>${[
+          product.image_url,
+          product.image_url_2,
+          product.image_url_3
+        ].filter(Boolean).length} image(s)</p>
       </div>
 
       <div class="admin-product-actions">
-
         <button
-          class="admin-button"
+          type="button"
+          class="secondary-btn"
           data-edit="${escapeHTML(product.id)}"
-          type="button"
-        >
-          EDIT
-        </button>
+        >EDIT</button>
 
         <button
-          class="admin-button danger"
-          data-delete="${escapeHTML(product.id)}"
           type="button"
-        >
-          DELETE
-        </button>
-
+          class="danger-btn"
+          data-delete="${escapeHTML(product.id)}"
+        >DELETE</button>
       </div>
-    </div>
+    </article>
   `).join("");
 }
 
-// Edit and delete product buttons
-$("adminProductList").addEventListener("click", async event => {
+function resetProductForm() {
+  $("productForm").reset();
+  $("productId").value = "";
+  $("productActive").checked = true;
+  $("productFormTitle").textContent = "ADD NEW PRODUCT";
+  $("saveProductButton").textContent = "SAVE PRODUCT";
+  $("cancelEditButton").hidden = true;
+  showMessage("productMessage", "");
+}
 
-  const editButton = event.target.closest("[data-edit]");
-  const deleteButton = event.target.closest("[data-delete]");
-
-  if (editButton) {
-    const product = currentProducts.find(
-      p => String(p.id) === editButton.dataset.edit
-    );
-
-    if (product) startEditing(product);
-  }
-
-  if (deleteButton) {
-    const product = currentProducts.find(
-      p => String(p.id) === deleteButton.dataset.delete
-    );
-
-    if (!product) return;
-
-    if (!confirm(`Delete "${product.name}"?`)) return;
-
-    const { error } = await db
-      .from("products")
-      .delete()
-      .eq("id", product.id);
-
-    if (error) {
-      message("productMessage", error.message, true);
-    } else {
-      message("productMessage", "Product deleted successfully!");
-      await loadAdminProducts();
-    }
-  }
-});
-
-// Load existing product into edit form
-function startEditing(product) {
-  editingProduct = product;
-
+function editProduct(product) {
   $("productId").value = product.id;
   $("productName").value = product.name || "";
   $("productPrice").value = product.price || "";
@@ -298,45 +207,40 @@ function startEditing(product) {
   $("productDescription").value = product.description || "";
   $("productActive").checked = product.is_active !== false;
 
-  $("productFormTitle").textContent = "Edit Product";
-  $("saveProductButton").textContent = "SAVE CHANGES";
+  $("productImage1").value = "";
+  $("productImage2").value = "";
+  $("productImage3").value = "";
 
-  $("cancelEditButton").classList.remove("hidden");
+  $("productFormTitle").textContent = "EDIT PRODUCT";
+  $("saveProductButton").textContent = "UPDATE PRODUCT";
+  $("cancelEditButton").hidden = false;
 
-  $("productFormTitle").scrollIntoView({
-    behavior: "smooth"
+  showMessage(
+    "productMessage",
+    "Choose new images only for the images you want to replace. Leave the others empty to keep existing images."
+  );
+
+  $("productForm").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
   });
 }
 
-// Reset product form
-function resetProductForm() {
-  editingProduct = null;
-
-  $("productForm").reset();
-  $("productId").value = "";
-
-  $("productActive").checked = true;
-
-  $("productFormTitle").textContent = "Add New Product";
-  $("saveProductButton").textContent = "ADD PRODUCT";
-
-  $("cancelEditButton").classList.add("hidden");
-}
-
-// Cancel editing
-$("cancelEditButton").addEventListener("click", resetProductForm);
-
-// Add or update product with 3 images
 $("productForm").addEventListener("submit", async event => {
   event.preventDefault();
 
-  message("productMessage", "Saving product...");
+  const productId = $("productId").value;
+  const oldProduct = currentProducts.find(
+    product => String(product.id) === String(productId)
+  );
 
   const name = $("productName").value.trim();
   const price = Number($("productPrice").value);
-  const category = $("productCategory").value;
-  const description = $("productDescription").value.trim();
-  const is_active = $("productActive").checked;
+
+  if (!name || !Number.isFinite(price) || price < 0) {
+    showMessage("productMessage", "Enter a valid product name and price.", true);
+    return;
+  }
 
   const files = [
     $("productImage1").files[0],
@@ -344,82 +248,169 @@ $("productForm").addEventListener("submit", async event => {
     $("productImage3").files[0]
   ];
 
-  if (!name || !Number.isFinite(price) || price < 0) {
-    message("productMessage", "Enter a valid product name and price.", true);
+  if (!oldProduct && !files[0]) {
+    showMessage("productMessage", "Please select the main product image.", true);
     return;
   }
 
-  // Keep previous images when editing
-  let imageUrls = [
-    editingProduct?.image_url || "",
-    editingProduct?.image_url_2 || "",
-    editingProduct?.image_url_3 || ""
-  ];
+  const saveButton = $("saveProductButton");
+  saveButton.disabled = true;
+  saveButton.textContent = "SAVING...";
 
-  // Main image is required for new products
-  if (!editingProduct && !files[0]) {
-    message("productMessage", "Please upload the main product image.", true);
-    return;
-  }
-
-  // Upload selected images
   try {
-    for (let i = 0; i < 3; i++) {
+    showMessage("productMessage", "Uploading images...");
+
+    const imageUrls = [
+      oldProduct?.image_url || null,
+      oldProduct?.image_url_2 || null,
+      oldProduct?.image_url_3 || null
+    ];
+
+    for (let i = 0; i < files.length; i++) {
       if (files[i]) {
         imageUrls[i] = await uploadProductImage(files[i]);
       }
     }
+
+    const productData = {
+      name,
+      price,
+      category: $("productCategory").value,
+      description: $("productDescription").value.trim(),
+      image_url: imageUrls[0],
+      image_url_2: imageUrls[1],
+      image_url_3: imageUrls[2],
+      is_active: $("productActive").checked
+    };
+
+    showMessage("productMessage", "Saving product details...");
+
+    let result;
+
+    if (oldProduct) {
+      result = await supabase
+        .from("products")
+        .update(productData)
+        .eq("id", productId);
+    } else {
+      result = await supabase
+        .from("products")
+        .insert(productData);
+    }
+
+    if (result.error) throw result.error;
+
+    showMessage("productMessage", "Product saved successfully!");
+
+    resetProductForm();
+    await loadAdminProducts();
+
   } catch (error) {
-    message("productMessage", error.message, true);
-    return;
+    console.error(error);
+    showMessage("productMessage", error.message || "Something went wrong.", true);
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = $("productId").value
+      ? "UPDATE PRODUCT"
+      : "SAVE PRODUCT";
   }
-
-  // Product information
-  const productData = {
-    name,
-    price,
-    category,
-    description,
-
-    image_url: imageUrls[0],
-    image_url_2: imageUrls[1],
-    image_url_3: imageUrls[2],
-
-    is_active
-  };
-
-  let result;
-
-  // Update existing product
-  if (editingProduct) {
-    result = await db
-      .from("products")
-      .update(productData)
-      .eq("id", editingProduct.id);
-
-  } else {
-    // Add new product
-    result = await db
-      .from("products")
-      .insert(productData);
-  }
-
-  if (result.error) {
-    message("productMessage", result.error.message, true);
-    return;
-  }
-
-  message(
-    "productMessage",
-    editingProduct
-      ? "Product updated successfully!"
-      : "Product added successfully!"
-  );
-
-  resetProductForm();
-
-  await loadAdminProducts();
 });
 
-// Start admin panel
-await checkAdmin();
+$("cancelEditButton").addEventListener("click", resetProductForm);
+
+$("adminProductList").addEventListener("click", async event => {
+  const editButton = event.target.closest("[data-edit]");
+  const deleteButton = event.target.closest("[data-delete]");
+
+  if (editButton) {
+    const product = currentProducts.find(
+      item => String(item.id) === editButton.dataset.edit
+    );
+
+    if (product) editProduct(product);
+  }
+
+  if (deleteButton) {
+    const product = currentProducts.find(
+      item => String(item.id) === deleteButton.dataset.delete
+    );
+
+    if (!product) return;
+
+    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", product.id);
+
+    if (error) {
+      alert(error.message);
+    } else {
+      await loadAdminProducts();
+      if ($("productId").value === String(product.id)) {
+        resetProductForm();
+      }
+    }
+  }
+});
+
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  showMessage("loginMessage", "Checking login...");
+
+  const email = $("email").value.trim();
+  const password = $("password").value;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    showMessage("loginMessage", error.message, true);
+    return;
+  }
+
+  const allowed = await isAdmin(data.user.id);
+
+  if (!allowed) {
+    await supabase.auth.signOut();
+    showMessage("loginMessage", "This account is not authorised as an admin.", true);
+    return;
+  }
+
+  showDashboard();
+  await Promise.all([loadSettings(), loadAdminProducts()]);
+});
+
+$("logoutButton").addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  showLogin();
+  $("loginForm").reset();
+  showMessage("loginMessage", "You have logged out.");
+});
+
+async function checkExistingSession() {
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+
+  if (!user) {
+    showLogin();
+    return;
+  }
+
+  if (await isAdmin(user.id)) {
+    showDashboard();
+    await Promise.all([loadSettings(), loadAdminProducts()]);
+  } else {
+    await supabase.auth.signOut();
+    showLogin();
+    showMessage("loginMessage", "This account is not authorised as an admin.", true);
+  }
+}
+
+checkExistingSession();
