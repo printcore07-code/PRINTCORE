@@ -1,34 +1,111 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FORMA — Studio Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRINTCORE | Admin Panel</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script defer src="admin.js"></script>
 </head>
 <body class="admin-page">
-  <header class="site-header admin-header"><a class="brand" href="index.html">FORMA<span>.</span><small>STUDIO ADMIN</small></a><a class="admin-link" href="index.html">← Back to storefront</a></header>
-  <main class="admin-wrap">
-    <section class="admin-intro"><p class="eyebrow">BEHIND THE SCENES</p><h1>Your store,<br><em>beautifully managed.</em></h1><p class="muted">Add new art, update product details and keep your collection fresh.</p></section>
-    <section id="loginPanel" class="panel login-panel"><p class="eyebrow">WELCOME BACK</p><h2>Studio sign in</h2><form id="loginForm" class="form-stack"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button class="dark-button full" type="submit">Sign in <span>↗</span></button></form><p id="loginMessage" class="form-message"></p></section>
-    <section id="dashboard" hidden>
-      <div class="dashboard-top"><div><p class="eyebrow">YOUR CATALOGUE</p><h2>Product studio</h2></div><button id="logoutButton" class="outline-button">Sign out</button></div>
-      <div class="admin-columns">
-        <section class="panel"><p class="eyebrow">PRODUCT DETAILS</p><h3 id="formTitle">Add a new piece</h3><form id="productForm" class="form-stack">
-          <input id="productId" type="hidden">
-          <label>Product name<input id="productName" required maxlength="120" placeholder="e.g. The Quiet Morning Print"></label>
-          <label>Collection<select id="productCategory"><option>Wall Posters</option><option>Photo Frames</option><option>Wall Art</option></select></label>
-          <label>Description<textarea id="productDescription" rows="4" placeholder="A few words about this piece…"></textarea></label>
-          <label>Price (₹)<input id="productPrice" type="number" min="0" step="0.01" required placeholder="499"></label>
-          <label>Product photograph<input id="productImage" type="file" accept="image/*"></label>
-          <label class="check-label"><input id="productActive" type="checkbox" checked> Visible in storefront</label>
-          <button class="dark-button full" type="submit" id="saveProduct">Save product <span>↗</span></button><button class="outline-button full" type="button" id="cancelEdit" hidden>Cancel edit</button>
-        </form><p id="productMessage" class="form-message"></p></section>
-        <section class="panel"><p class="eyebrow">LIVE CATALOGUE</p><h3>Your products</h3><div id="adminProductList" class="admin-product-list">Loading your products…</div></section>
+
+<div class="admin-container">
+  <a class="logo" href="index.html">PRINT<span>CORE.</span></a>
+  <p class="eyebrow">STORE MANAGEMENT</p>
+  <h1>ADMIN PANEL</h1>
+
+  <section class="admin-panel" id="loginSection">
+    <h2>Admin Login</h2>
+    <form id="loginForm" class="admin-form">
+      <label class="full">
+        Email address
+        <input type="email" id="email" required autocomplete="username">
+      </label>
+      <label class="full">
+        Password
+        <input type="password" id="password" required autocomplete="current-password">
+      </label>
+      <div class="full">
+        <button class="admin-button" type="submit">LOGIN TO DASHBOARD</button>
       </div>
+    </form>
+    <p class="admin-message" id="loginMessage"></p>
+  </section>
+
+  <div id="dashboard" class="hidden">
+    <section class="admin-panel">
+      <div class="section-heading">
+        <h2>Store Settings</h2>
+        <button class="admin-button" id="logoutButton" type="button">LOG OUT</button>
+      </div>
+      <form id="settingsForm" class="admin-form">
+        <label class="full">
+          WhatsApp ordering number
+          <input id="whatsappNumber" type="tel" placeholder="919876543210" required>
+        </label>
+        <div class="full">
+          <button class="admin-button" type="submit">SAVE WHATSAPP NUMBER</button>
+        </div>
+      </form>
+      <p class="admin-message" id="settingsMessage"></p>
     </section>
-  </main>
-  <div id="toast" class="toast" role="status"></div>
-</body></html>
+
+    <section class="admin-panel">
+      <h2 id="productFormTitle">Add New Product</h2>
+      <form id="productForm" class="admin-form">
+        <input type="hidden" id="productId">
+
+        <label>
+          Product name
+          <input id="productName" required>
+        </label>
+
+        <label>
+          Price (₹)
+          <input id="productPrice" type="number" min="0" step="0.01" required>
+        </label>
+
+        <label>
+          Category
+          <select id="productCategory" required>
+            <option>Car Posters</option>
+            <option>Wall Posters</option>
+            <option>Bike Posters</option>
+            <option>Movie Posters</option>
+            <option>Custom Posters</option>
+          </select>
+        </label>
+
+        <label>
+          Product image
+          <input id="productImage" type="file" accept="image/*">
+        </label>
+
+        <label class="full">
+          Description
+          <textarea id="productDescription" placeholder="Describe your poster..."></textarea>
+        </label>
+
+        <label class="full">
+          <input id="productActive" type="checkbox" checked style="width:auto">
+          Product available in store
+        </label>
+
+        <div class="full">
+          <button class="admin-button" type="submit" id="saveProductButton">ADD PRODUCT</button>
+          <button class="admin-button hidden" type="button" id="cancelEditButton">CANCEL EDIT</button>
+        </div>
+      </form>
+      <p class="admin-message" id="productMessage"></p>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Your Products</h2>
+      <div id="adminProductList">Loading products...</div>
+    </section>
+  </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
