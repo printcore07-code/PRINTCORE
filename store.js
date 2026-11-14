@@ -76,10 +76,19 @@ function renderProducts() {
     return `
       <article class="product-card">
         <div class="product-image">
-          <img src="${escapeHTML(product.image_url || "")}"
-               alt="${safeName}"
-               loading="lazy"
-               onerror="this.style.display='none'">
+          <div class="product-gallery">
+  ${[
+    product.image_url,
+    product.image_url_2,
+    product.image_url_3
+  ]
+    .filter(Boolean)
+    .map(url => `
+      <img src="${escapeHTML(url)}"
+           alt="${escapeHTML(product.name)}"
+           loading="lazy">
+    `).join("")}
+</div>
         </div>
         <div class="product-info">
           <span class="product-category">${safeCategory}</span>
