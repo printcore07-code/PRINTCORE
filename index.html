@@ -1,86 +1,120 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f0e8">
-  <title>FORMA — Art for Your Walls</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111111">
+  <title>PRINTCORE | Posters That Make a Statement</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script defer src="store.js"></script>
 </head>
 <body>
-  <div class="announcement">A little art goes a long way. Discover pieces that feel like you.</div>
-  <header class="site-header">
-    <a class="brand" href="index.html">FORMA<span>.</span><small>WALL & LIVING</small></a>
-    <nav class="main-nav"><a href="#shop">Shop all</a><a href="#collections">Collections</a><a href="#about">Our story</a></nav>
-    <div class="header-actions">
-      <a class="admin-link" href="admin.html">Admin</a>
-      <button class="cart-button" id="cartToggle" aria-label="Open shopping bag"><span class="bag-icon">▢</span><span>Bag</span><b id="cartCount">0</b></button>
-      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button>
+
+<header class="header">
+  <a class="logo" href="index.html">PRINT<span>CORE.</span></a>
+
+  <nav class="nav">
+    <a href="#home">Home</a>
+    <a href="#categories">Categories</a>
+    <a href="#products">Shop</a>
+  </nav>
+
+  <div class="header-actions">
+    <a class="admin-link" href="admin.html">ADMIN</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#home">Home</a>
+  <a href="#categories">Categories</a>
+  <a href="#products">Shop</a>
+</div>
+
+<main>
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <p class="eyebrow">ART FOR YOUR WALLS</p>
+      <h1>MAKE YOUR<br><span>WALLS SPEAK.</span></h1>
+      <p class="hero-description">
+        Premium posters for car lovers, art lovers and everyone
+        who wants something different.
+      </p>
+      <a class="primary-btn" href="#products">EXPLORE COLLECTION <span>↗</span></a>
     </div>
-  </header>
+    <div class="hero-art">
+      <div class="hero-tag">PRINTCORE<br>COLLECTION 01</div>
+      <div class="hero-circle">PC.</div>
+      <div class="hero-bottom">YOUR WALL. YOUR STYLE.</div>
+    </div>
+  </section>
 
-  <main>
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow"><i></i> ART THAT MAKES A HOUSE A HOME</p>
-        <h1>Your walls.<br><em>Your story.</em></h1>
-        <p class="hero-desc">Thoughtfully curated posters and frames to bring personality, warmth and a little wonder into your space.</p>
-        <a class="dark-button" href="#shop">Explore the collection <span>↗</span></a>
-        <div class="hero-note"><span class="note-line"></span> MADE FOR THE SPACES YOU LOVE</div>
+  <section class="categories section" id="categories">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">FIND YOUR STYLE</p>
+        <h2>SHOP BY CATEGORY</h2>
       </div>
-      <div class="hero-gallery" aria-label="Decorative wall art display">
-        <div class="gallery-wall">
-          <div class="art-frame frame-one"><div class="art-one"><small>FORM / 001</small><strong>LESS<br>BUT<br><i>BETTER.</i></strong><span>THE ART OF SLOW LIVING</span></div></div>
-          <div class="art-frame frame-two"><div class="art-two"><span>BOTANICAL STUDY</span><div class="leaf-shape"></div><small>FIG. 04 — NATURA</small></div></div>
-          <div class="art-frame frame-three"><div class="art-three"><small>ABSTRACT NO. 08</small><div class="abstract-shapes"><i></i><b></b><em></em></div></div></div>
-          <div class="gallery-caption">A SPACE THAT FEELS LIKE YOU <span>01 / 03</span></div>
-        </div>
+    </div>
+
+    <div class="category-grid">
+      <button class="category-card" data-category="Car Posters">
+        <span>01</span><strong>CAR POSTERS</strong><small>For automotive enthusiasts ↗</small>
+      </button>
+      <button class="category-card" data-category="Wall Posters">
+        <span>02</span><strong>WALL POSTERS</strong><small>Make your space unique ↗</small>
+      </button>
+      <button class="category-card" data-category="Bike Posters">
+        <span>03</span><strong>BIKE POSTERS</strong><small>Two-wheel passion ↗</small>
+      </button>
+      <button class="category-card" data-category="Movie Posters">
+        <span>04</span><strong>MOVIE POSTERS</strong><small>Bring cinema home ↗</small>
+      </button>
+      <button class="category-card" data-category="Custom Posters">
+        <span>05</span><strong>CUSTOM POSTERS</strong><small>Your idea, our print ↗</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="products-section section" id="products">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">THE PRINTCORE COLLECTION</p>
+        <h2>FIND YOUR NEXT FAVOURITE.</h2>
       </div>
-    </section>
+      <span class="product-count" id="productCount">Loading products...</span>
+    </div>
 
-    <section class="benefit-strip">
-      <div><span>✳</span><p>Curated designs</p></div><div><span>◇</span><p>Made to elevate spaces</p></div><div><span>♡</span><p>Art worth coming home to</p></div>
-    </section>
+    <div class="shop-controls">
+      <input id="searchInput" type="search" placeholder="Search posters..." aria-label="Search products">
+      <select id="categoryFilter" aria-label="Filter category">
+        <option value="all">All categories</option>
+        <option>Car Posters</option>
+        <option>Wall Posters</option>
+        <option>Bike Posters</option>
+        <option>Movie Posters</option>
+        <option>Custom Posters</option>
+      </select>
+    </div>
 
-    <section class="collection-intro" id="collections">
-      <div><p class="eyebrow">FIND YOUR FEEL</p><h2>Make room for <em>beautiful things.</em></h2></div>
-      <p>From bold statement pieces to quiet little details, find the finishing touch for every corner.</p>
-    </section>
-    <section class="category-tiles">
-      <a class="category-tile tile-poster" href="#shop" data-category-link="Wall Posters"><div class="tile-art tile-art-poster"><span>ART<br>PRINTS</span><small>01 — THE PRINT EDIT</small></div><div class="tile-label"><span>Wall Posters</span><b>Explore ↗</b></div></a>
-      <a class="category-tile tile-frame" href="#shop" data-category-link="Photo Frames"><div class="tile-art tile-art-frame"><div class="mini-frame">YOUR<br>FAVOURITE<br>MOMENT</div></div><div class="tile-label"><span>Photo Frames</span><b>Explore ↗</b></div></a>
-      <a class="category-tile tile-wall" href="#shop" data-category-link="Wall Art"><div class="tile-art tile-art-wall"><div class="wall-art-shape"><i></i><b></b><em></em></div><small>OBJECTS FOR YOUR WALLS</small></div><div class="tile-label"><span>Wall Art</span><b>Explore ↗</b></div></a>
-    </section>
+    <div class="product-grid" id="productGrid">
+      <div class="loading">Loading the collection...</div>
+    </div>
+  </section>
 
-    <section class="shop-section" id="shop">
-      <div class="shop-heading"><div><p class="eyebrow">THE GOOD STUFF</p><h2>Pieces to <em>fall for.</em></h2></div><label class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Search the collection..." aria-label="Search products"></label></div>
-      <div class="filter-row" id="categoryFilters">
-        <button class="filter-chip active" data-category="All">All pieces</button>
-        <button class="filter-chip" data-category="Wall Posters">Wall posters</button>
-        <button class="filter-chip" data-category="Photo Frames">Photo frames</button>
-        <button class="filter-chip" data-category="Wall Art">Wall art</button>
-      </div>
-      <div id="status" class="status">Discovering the collection…</div>
-      <div id="productGrid" class="product-grid"></div>
-    </section>
+  <section class="banner">
+    <p class="eyebrow">YOUR SPACE. YOUR PERSONALITY.</p>
+    <h2>DON'T LEAVE<br>YOUR WALLS EMPTY.</h2>
+    <a href="#products" class="primary-btn">SHOP PRINTCORE ↗</a>
+  </section>
+</main>
 
-    <section class="quote-banner" id="about"><p class="eyebrow">A NOTE FROM FORMA</p><h2>“The details are not the details.<br><em>They make the design.”</em></h2><p>Bring home the pieces that make your space unmistakably yours.</p></section>
-  </main>
+<footer class="footer">
+  <a class="logo" href="#home">PRINT<span>CORE.</span></a>
+  <p>POSTERS THAT MAKE A STATEMENT.</p>
+  <small>© <span id="year"></span> PRINTCORE. All rights reserved.</small>
+</footer>
 
-  <footer class="site-footer"><a class="brand footer-brand" href="#">FORMA<span>.</span><small>WALL & LIVING</small></a><p>Art for the walls. Feeling for the home.</p><span>© <span id="year"></span> FORMA Studio</span></footer>
-
-  <div class="cart-backdrop" id="cartBackdrop"></div>
-  <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping bag">
-    <div class="cart-head"><div><p class="eyebrow">YOUR GOOD FINDS</p><h2>Your bag</h2></div><button class="icon-button" id="cartClose" aria-label="Close bag">×</button></div>
-    <div id="cartItems" class="cart-items"></div>
-    <div class="cart-foot"><div class="cart-total"><span>Subtotal</span><strong id="cartTotal">₹0.00</strong></div><p class="muted small">Checkout and online payments will be added in the next stage. Your bag is currently saved in this browser.</p><button class="dark-button full" id="checkoutInfo">Continue shopping <span>↗</span></button></div>
-  </aside>
-  <div id="toast" class="toast" role="status"></div>
+<script type="module" src="store.js"></script>
 </body>
 </html>
