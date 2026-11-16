@@ -1,0 +1,341 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  color: #222;
+}
+
+.admin-header {
+  background: #d90000;
+  color: white;
+  padding: 20px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-header h1 {
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.admin-header h1 span {
+  color: #222;
+}
+
+.admin-header a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  background: #222;
+  padding: 11px 18px;
+  border-radius: 6px;
+}
+
+.admin-container {
+  width: 92%;
+  max-width: 1050px;
+  margin: 30px auto;
+}
+
+.admin-card {
+  background: white;
+  padding: 28px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+}
+
+.admin-card h2 {
+  font-size: 23px;
+  margin-bottom: 10px;
+}
+
+.admin-card > p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin: 18px 0 8px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #d90000;
+}
+
+textarea {
+  resize: vertical;
+}
+
+small {
+  display: block;
+  color: #777;
+  margin-top: 7px;
+  line-height: 1.5;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.admin-btn,
+.cancel-btn,
+.logout-btn {
+  border: none;
+  padding: 13px 22px;
+  border-radius: 7px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.admin-btn {
+  background: #d90000;
+  color: white;
+}
+
+.admin-btn:hover {
+  background: #b90000;
+}
+
+.cancel-btn {
+  background: #ddd;
+  color: #222;
+}
+
+.logout-btn {
+  background: #222;
+  color: white;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.image-upload-section {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 25px;
+}
+
+.image-upload-section h3 {
+  font-size: 19px;
+  margin-bottom: 8px;
+}
+
+.image-upload-section p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.image-upload-section input {
+  background: white;
+}
+
+.image-note {
+  margin-top: 15px;
+  line-height: 1.5;
+}
+
+.dashboard-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.dashboard-heading h2 {
+  font-size: 26px;
+}
+
+.dashboard-heading p {
+  color: #666;
+  margin-top: 6px;
+}
+
+.product-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.product-list-heading button {
+  padding: 10px 17px;
+  background: #222;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#adminProductList {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-product-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 9px;
+}
+
+.admin-product-item img {
+  width: 85px;
+  height: 85px;
+  object-fit: cover;
+  border-radius: 7px;
+}
+
+.admin-product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-product-info h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.admin-product-info p {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 9px 13px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 3px;
+}
+
+.edit-btn {
+  background: #222;
+  color: white;
+}
+
+.delete-btn {
+  background: #ffe1e1;
+  color: #c00000;
+}
+
+#loginMessage,
+#productMessage {
+  margin-top: 15px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* MOBILE RESPONSIVE DESIGN */
+
+@media (max-width: 600px) {
+  .admin-header {
+    padding: 16px 5%;
+  }
+
+  .admin-header h1 {
+    font-size: 20px;
+  }
+
+  .admin-header a {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .admin-container {
+    width: 94%;
+    margin: 18px auto;
+  }
+
+  .admin-card {
+    padding: 19px;
+    border-radius: 10px;
+  }
+
+  .admin-card h2 {
+    font-size: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .dashboard-heading {
+    align-items: flex-start;
+  }
+
+  .dashboard-heading h2 {
+    font-size: 21px;
+  }
+
+  .logout-btn {
+    padding: 10px 13px;
+  }
+
+  .admin-product-item {
+    flex-wrap: wrap;
+  }
+
+  .admin-product-item img {
+    width: 75px;
+    height: 75px;
+  }
+
+  .admin-product-info {
+    flex-basis: calc(100% - 100px);
+  }
+
+  .edit-btn,
+  .delete-btn {
+    flex: 1;
+  }
+
+  .form-buttons button {
+    width: 100%;
+  }
+}
