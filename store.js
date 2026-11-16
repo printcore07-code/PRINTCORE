@@ -1,186 +1,387 @@
 
-import { createClient } from
-  "https://esm.sh/@supabase/supabase-js@2";
+// ========================================
+// PRINTCORE - STORE JAVASCRIPT
+// ========================================
 
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const productGrid = document.getElementById("productGrid");
-const searchInput = document.getElementById("searchInput");
-const categoryList = document.getElementById("categoryList");
-const productCount = document.getElementById("productCount");
+const db = window.supabase.createClient(
+  window.PRINTCORE_CONFIG.SUPABASE_URL,
+  window.PRINTCORE_CONFIG.SUPABASE_ANON_KEY
+);
 
 let allProducts = [];
 let selectedCategory = "All";
-let whatsappNumber = "";
+let selectedProduct = null;
 
-function escapeHTML(value = "") {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  })[char]);
+// ========================================
+// HTML ELEMENTS
+// ========================================
+
+const productGrid = document.getElementById("productGrid");
+const productCount = document.getElementById("productCount");
+const emptyState = document.getElementById("emptyState");
+const searchInput = document.getElementById("searchInput");
+
+const modal = document.getElementById("productModal");
+const mainImage = document.getElementById("mainProductImage");
+const thumbnails = document.getElementById("thumbnails");
+
+// ========================================
+// FORMAT PRICE
+// ========================================
+
+function formatPrice(price) {
+  return "₹" + Number(price || 0).toLocaleString("en-IN");
 }
 
-async function loadSettings() {
-  const { data, error } = await supabase
-    .from("store_settings")
-    .select("whatsapp_number")
-    .eq("id", 1)
-    .maybeSingle();
+// ========================================
+// GET PRODUCT IMAGES
+// Supports image_urls array or image1-image4
+// ========================================
 
-  if (!error && data) {
-    whatsappNumber = data.whatsapp_number || "";
+function getImages(product) {
+  let images = [];
+
+  if (Array.isArray(product.image_urls)) {
+    images = product.image_urls;
+  } else if (Array.isArray(product.images)) {
+    images = product.images;
+  } else {
+    images = [
+      product.image1,
+      product.image2,
+      product.image3,
+      product.image4
+    ];
   }
+
+  return images.filter(
+    image => typeof image === "string" && image.trim() !== ""
+  ).slice(0, 4);
 }
+
+// ========================================
+// LOAD PRODUCTS FROM SUPABASE
+// ========================================
 
 async function loadProducts() {
+
   productGrid.innerHTML =
-    '<div class="loading-message">Loading products...</div>';
+    '<div class="loading">Loading products...</div>';
 
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+  try {
 
-  if (error) {
+    const { data, error } = await db
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    allProducts = data || [];
+
+    displayProducts();
+
+  } catch (error) {
+
+    console.error("Product loading error:", error);
+
     productGrid.innerHTML =
-      '<div class="empty-message">Unable to load products. Please refresh the page.</div>';
-    console.error(error);
-    return;
+      '<div class="loading">Unable to load products. Please check your database connection.</div>';
+
+    productCount.textContent = "Error";
+
   }
 
-  allProducts = data || [];
-  renderProducts();
 }
 
-function renderProducts() {
-  const search = searchInput.value.trim().toLowerCase();
+// ========================================
+// DISPLAY PRODUCTS
+// ========================================
 
-  const filtered = allProducts.filter(product => {
+function displayProducts() {
+
+  const searchText = searchInput.value
+    .trim()
+    .toLowerCase();
+
+  const filteredProducts = allProducts.filter(product => {
+
     const matchesCategory =
       selectedCategory === "All" ||
-      (product.category || "Wall Posters") === selectedCategory;
+      product.category === selectedCategory;
 
     const matchesSearch =
-      (product.name || "").toLowerCase().includes(search) ||
-      (product.description || "").toLowerCase().includes(search);
+      (product.name || "")
+        .toLowerCase()
+        .includes(searchText) ||
+      (product.description || "")
+        .toLowerCase()
+        .includes(searchText);
 
     return matchesCategory && matchesSearch;
+
   });
 
-  productCount.textContent = `${filtered.length} products`;
+  productGrid.innerHTML = "";
 
-  if (!filtered.length) {
-    productGrid.innerHTML =
-      '<div class="empty-message">No posters found. Try another search.</div>';
-    return;
-  }
+  productCount.textContent =
+    filteredProducts.length + " products";
 
-  productGrid.innerHTML = filtered.map(product => {
-    const images = [
-      product.image_url,
-      product.image_url_2,
-      product.image_url_3
-    ].filter(Boolean);
-
-    const safeName = escapeHTML(product.name);
-    const safeCategory = escapeHTML(product.category || "Wall Posters");
-    const safeDescription = escapeHTML(product.description || "");
-    const galleryClass =
-      images.length === 1 ? "single-image" :
-      images.length === 2 ? "two-images" : "";
-
-    const gallery = images.length
-      ? images.map((url, index) => `
-          <img
-            src="${escapeHTML(url)}"
-            alt="${safeName} - image ${index + 1}"
-            loading="lazy"
-          >
-        `).join("")
-      : '<div class="empty-message">No image available</div>';
-
-    return `
-      <article class="product-card">
-        <div class="product-gallery ${galleryClass}">
-          ${gallery}
-        </div>
-
-        <div class="product-info">
-          <span class="product-category">${safeCategory}</span>
-          <h3>${safeName}</h3>
-          <p class="product-description">${safeDescription}</p>
-
-          <div class="product-bottom">
-            <span class="product-price">₹${Number(product.price).toLocaleString("en-IN")}</span>
-            <button class="buy-btn" data-product-id="${escapeHTML(product.id)}">
-              BUY NOW →
-            </button>
-          </div>
-        </div>
-      </article>
-    `;
-  }).join("");
-}
-
-function buyProduct(productId) {
-  const product = allProducts.find(
-    item => String(item.id) === String(productId)
+  emptyState.classList.toggle(
+    "hidden",
+    filteredProducts.length !== 0
   );
 
-  if (!product) return;
+  filteredProducts.forEach(product => {
 
-  if (!whatsappNumber) {
-    alert("WhatsApp ordering number has not been configured yet.");
-    return;
-  }
+    const images = getImages(product);
 
-  const phone = whatsappNumber.replace(/\D/g, "");
+    const image = images[0] ||
+      "https://placehold.co/500x600?text=PRINTCORE";
 
-  if (!phone) {
-    alert("The WhatsApp number in the admin settings is invalid.");
-    return;
-  }
+    const card = document.createElement("article");
 
-  const message =
-    `Hello PRINTCORE!\n\nI want to order this poster:\n` +
-    `Product: ${product.name}\n` +
-    `Price: ₹${product.price}\n` +
-    `Product ID: ${product.id}`;
+    card.className = "product-card";
 
-  const url =
-    `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const imageBox = document.createElement("div");
+    imageBox.className = "product-image";
 
-  window.open(url, "_blank", "noopener,noreferrer");
-}
+    const img = document.createElement("img");
+    img.src = image;
+    img.alt = product.name || "Product";
+    img.loading = "lazy";
 
-productGrid.addEventListener("click", event => {
-  const button = event.target.closest(".buy-btn");
-  if (button) buyProduct(button.dataset.productId);
-});
+    const tag = document.createElement("span");
+    tag.className = "product-tag";
+    tag.textContent = product.category || "Poster";
 
-searchInput.addEventListener("input", renderProducts);
+    imageBox.append(img, tag);
 
-categoryList.addEventListener("click", event => {
-  const button = event.target.closest(".category-chip");
-  if (!button) return;
+    const name = document.createElement("h3");
+    name.textContent = product.name || "Unnamed product";
 
-  document.querySelectorAll(".category-chip").forEach(chip => {
-    chip.classList.remove("active");
+    const bottom = document.createElement("div");
+    bottom.className = "card-bottom";
+
+    const priceBox = document.createElement("div");
+    priceBox.className = "card-price";
+    priceBox.textContent = formatPrice(product.price);
+
+    if (product.old_price) {
+
+      const oldPrice = document.createElement("del");
+      oldPrice.className = "card-old";
+      oldPrice.textContent = formatPrice(product.old_price);
+
+      priceBox.appendChild(oldPrice);
+
+    }
+
+    const quickView = document.createElement("span");
+    quickView.className = "quick-view";
+    quickView.textContent = "View details ↗";
+
+    bottom.append(priceBox, quickView);
+
+    card.append(imageBox, name, bottom);
+
+    card.addEventListener("click", () => {
+      openProduct(product);
+    });
+
+    productGrid.appendChild(card);
+
   });
 
-  button.classList.add("active");
-  selectedCategory = button.dataset.category;
-  renderProducts();
-});
-
-async function startStore() {
-  await Promise.all([loadSettings(), loadProducts()]);
 }
 
-startStore();
+// ========================================
+// CATEGORY FILTER
+// ========================================
+
+document.querySelectorAll(".category").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    document.querySelectorAll(".category")
+      .forEach(item => item.classList.remove("active"));
+
+    button.classList.add("active");
+
+    selectedCategory =
+      button.dataset.category;
+
+    displayProducts();
+
+  });
+
+});
+
+// ========================================
+// SEARCH
+// ========================================
+
+searchInput.addEventListener("input", displayProducts);
+
+// ========================================
+// OPEN PRODUCT DETAILS
+// ========================================
+
+function openProduct(product) {
+
+  selectedProduct = product;
+
+  const images = getImages(product);
+
+  document.getElementById("modalName").textContent =
+    product.name || "";
+
+  document.getElementById("modalCategory").textContent =
+    product.category || "";
+
+  document.getElementById("modalPrice").textContent =
+    formatPrice(product.price);
+
+  document.getElementById("modalOldPrice").textContent =
+    product.old_price
+      ? formatPrice(product.old_price)
+      : "";
+
+  document.getElementById("modalDescription").textContent =
+    product.description || "No description available.";
+
+  document.getElementById("modalSpecs").textContent =
+    product.specifications || "";
+
+  // MAIN IMAGE
+
+  mainImage.src = images[0] ||
+    "https://placehold.co/500x600?text=PRINTCORE";
+
+  // FOUR IMAGE THUMBNAILS
+
+  thumbnails.innerHTML = "";
+
+  images.forEach((image, index) => {
+
+    const button = document.createElement("button");
+
+    if (index === 0) {
+      button.classList.add("active");
+    }
+
+    const img = document.createElement("img");
+
+    img.src = image;
+    img.alt = "Product image " + (index + 1);
+
+    button.appendChild(img);
+
+    button.addEventListener("click", () => {
+
+      mainImage.src = image;
+
+      thumbnails.querySelectorAll("button")
+        .forEach(item => item.classList.remove("active"));
+
+      button.classList.add("active");
+
+    });
+
+    thumbnails.appendChild(button);
+
+  });
+
+  modal.classList.remove("hidden");
+
+  document.body.style.overflow = "hidden";
+
+}
+
+// ========================================
+// CLOSE PRODUCT POPUP
+// ========================================
+
+function closeProductModal() {
+
+  modal.classList.add("hidden");
+
+  document.body.style.overflow = "";
+
+  selectedProduct = null;
+
+}
+
+document.getElementById("closeModal")
+  .addEventListener("click", closeProductModal);
+
+document.getElementById("closeBackdrop")
+  .addEventListener("click", closeProductModal);
+
+document.addEventListener("keydown", event => {
+
+  if (event.key === "Escape" && !modal.classList.contains("hidden")) {
+    closeProductModal();
+  }
+
+});
+
+// ========================================
+// WHATSAPP BUY NOW
+// ========================================
+
+document.getElementById("buyNow")
+  .addEventListener("click", () => {
+
+    if (!selectedProduct) return;
+
+    const product = selectedProduct;
+
+    const whatsapp =
+      String(
+        product.whatsapp ||
+        window.PRINTCORE_CONFIG.STORE_WHATSAPP ||
+        ""
+      ).replace(/\D/g, "");
+
+    if (!whatsapp) {
+      alert("WhatsApp number is not configured.");
+      return;
+    }
+
+    const message =
+
+`Hello PRINTCORE!
+
+I am interested in ordering this product.
+
+Product: ${product.name}
+Category: ${product.category}
+Price: ${formatPrice(product.price)}
+
+Please provide more details about ordering.
+
+Thank you!`;
+
+    const url =
+      "https://wa.me/" +
+      whatsapp +
+      "?text=" +
+      encodeURIComponent(message);
+
+    window.open(url, "_blank");
+
+  });
+
+// ========================================
+// CURRENT YEAR
+// ========================================
+
+document.getElementById("year").textContent =
+  new Date().getFullYear();
+
+// ========================================
+// START WEBSITE
+// ========================================
+
+loadProducts();
