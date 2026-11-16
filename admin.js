@@ -1,16 +1,17 @@
 
 // ==========================================
-// PRINTCORE - ADMIN PANEL
+// PRINTCORE ADMIN PANEL - FIXED VERSION
 // ==========================================
 
 const config = window.PRINTCORE_CONFIG;
 
 if (!config || !config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
-  alert("Supabase configuration is missing. Please check config.js.");
+  alert("Supabase configuration is missing. Check config.js.");
   throw new Error("Missing Supabase configuration.");
 }
 
-const supabase = window.supabase.createClient(
+// IMPORTANT: Use supabaseClient, not supabase
+const supabaseClient = window.supabase.createClient(
   config.SUPABASE_URL,
   config.SUPABASE_ANON_KEY
 );
@@ -68,11 +69,11 @@ function showMessage(element, message, isError = false) {
 
 
 // ==========================================
-// CHECK WHETHER USER IS AN ADMIN
+// CHECK ADMIN ACCOUNT
 // ==========================================
 
 async function isAdmin(userId) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("admins")
     .select("user_id")
     .eq("user_id", userId)
@@ -88,34 +89,8 @@ async function isAdmin(userId) {
 
 
 // ==========================================
-// SHOW / HIDE ADMIN DASHBOARD
+// LOGIN DISPLAY
 // ==========================================
-
-async function checkLogin() {
-  const { data, error } = await supabase.auth.getSession();
-
-  if (error || !data.session) {
-    showLogin();
-    return;
-  }
-
-  const user = data.session.user;
-  const allowed = await isAdmin(user.id);
-
-  if (!allowed) {
-    await supabase.auth.signOut();
-    showLogin();
-    showMessage(
-      loginMessage,
-      "This account is not registered as an admin.",
-      true
-    );
-    return;
-  }
-
-  currentUser = user;
-  showDashboard();
-}
 
 function showLogin() {
   loginSection.hidden = false;
@@ -130,10 +105,48 @@ function showDashboard() {
 
 
 // ==========================================
+// CHECK EXISTING LOGIN
+// ==========================================
+
+async function checkLogin() {
+  try {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error || !data.session) {
+      showLogin();
+      return;
+    }
+
+    const user = data.session.user;
+    const allowed = await isAdmin(user.id);
+
+    if (!allowed) {
+      await supabaseClient.auth.signOut();
+      showLogin();
+      showMessage(
+        loginMessage,
+        "This account is not registered as an admin.",
+        true
+      );
+      return;
+    }
+
+    currentUser = user;
+    showDashboard();
+
+  } catch (error) {
+    console.error("Login check error:", error);
+    showLogin();
+    showMessage(loginMessage, error.message, true);
+  }
+}
+
+
+// ==========================================
 // ADMIN LOGIN
 // ==========================================
 
-loginForm.addEventListener("submit", async function (event) {
+loginForm.addEventListener("submit", async function(event) {
   event.preventDefault();
 
   const email = adminEmail.value.trim();
@@ -141,9 +154,9 @@ loginForm.addEventListener("submit", async function (event) {
 
   showMessage(loginMessage, "Logging in...");
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
   });
 
   if (error) {
@@ -154,11 +167,11 @@ loginForm.addEventListener("submit", async function (event) {
   const allowed = await isAdmin(data.user.id);
 
   if (!allowed) {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
 
     showMessage(
       loginMessage,
-      "Login successful, but this account is not an admin. Add its user ID to the admins table.",
+      "This account is not registered as an admin.",
       true
     );
     return;
@@ -171,11 +184,11 @@ loginForm.addEventListener("submit", async function (event) {
 
 
 // ==========================================
-// ADMIN LOGOUT
+// LOGOUT
 // ==========================================
 
-logoutBtn.addEventListener("click", async function () {
-  const { error } = await supabase.auth.signOut();
+logoutBtn.addEventListener("click", async function() {
+  const { error } = await supabaseClient.auth.signOut();
 
   if (error) {
     alert("Logout failed: " + error.message);
@@ -189,7 +202,7 @@ logoutBtn.addEventListener("click", async function () {
 
 
 // ==========================================
-// UPLOAD PRODUCT IMAGE
+// UPLOAD IMAGE
 // ==========================================
 
 async function uploadImage(file, productIdValue, imageNumber) {
@@ -198,26 +211,21 @@ async function uploadImage(file, productIdValue, imageNumber) {
     : "jpg";
 
   const filePath =
-    productIdValue +
-    "/" +
-    Date.now() +
-    "-" +
-    imageNumber +
-    "." +
+    productIdValue + "/" +
+    Date.now() + "-" +
+    imageNumber + "." +
     extension;
 
-  const { error } = await supabase.storage
+  const { error } = await supabaseClient.storage
     .from(STORAGE_BUCKET)
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false
     });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
-  const { data } = supabase.storage
+  const { data } = supabaseClient.storage
     .from(STORAGE_BUCKET)
     .getPublicUrl(filePath);
 
@@ -226,14 +234,15 @@ async function uploadImage(file, productIdValue, imageNumber) {
 
 
 // ==========================================
-// ADD / UPDATE PRODUCT
+// ADD OR UPDATE PRODUCT
 // ==========================================
 
-productForm.addEventListener("submit", async function (event) {
+productForm.addEventListener("submit", async function(event) {
   event.preventDefault();
 
   saveProductBtn.disabled = true;
   saveProductBtn.textContent = "Saving...";
+
   showMessage(productMessage, "Please wait...");
 
   try {
@@ -252,44 +261,37 @@ productForm.addEventListener("submit", async function (event) {
     };
 
     if (!productData.name || !productData.category) {
-      throw new Error("Please enter the product name and category.");
+      throw new Error("Enter the product name and category.");
     }
 
-    // Get existing images when editing
-    let imageUrls = [];
-
-    if (editingId) {
-      const existingProduct = currentProducts.find(
-        product => product.id === editingId
-      );
-
-      imageUrls = existingProduct?.image_urls || [];
-      imageUrls = [...imageUrls];
-    }
-
-    // Create a new product ID when adding a product
     const newProductId = editingId || crypto.randomUUID();
 
-    // Upload selected images and keep unchanged existing images
+    const existingProduct = currentProducts.find(
+      product => product.id === editingId
+    );
+
+    let imageUrls = existingProduct
+      ? [...(existingProduct.image_urls || [])]
+      : [];
+
     for (let i = 0; i < imageInputs.length; i++) {
       const file = imageInputs[i].files[0];
 
-      if (file) {
-        if (!file.type.startsWith("image/")) {
-          throw new Error("Please select valid image files.");
-        }
+      if (!file) continue;
 
-        const imageUrl = await uploadImage(
-          file,
-          newProductId,
-          i + 1
-        );
-
-        imageUrls[i] = imageUrl;
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Please select valid image files.");
       }
+
+      const imageUrl = await uploadImage(
+        file,
+        newProductId,
+        i + 1
+      );
+
+      imageUrls[i] = imageUrl;
     }
 
-    // Remove empty image positions
     imageUrls = imageUrls.filter(Boolean);
 
     if (imageUrls.length === 0) {
@@ -299,7 +301,7 @@ productForm.addEventListener("submit", async function (event) {
     productData.image_urls = imageUrls;
 
     if (editingId) {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from("products")
         .update(productData)
         .eq("id", editingId);
@@ -307,8 +309,9 @@ productForm.addEventListener("submit", async function (event) {
       if (error) throw error;
 
       showMessage(productMessage, "Product updated successfully!");
+
     } else {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from("products")
         .insert({
           id: newProductId,
@@ -324,12 +327,14 @@ productForm.addEventListener("submit", async function (event) {
     await loadProducts();
 
   } catch (error) {
-    console.error(error);
+    console.error("Product save error:", error);
+
     showMessage(
       productMessage,
       error.message || "Something went wrong.",
       true
     );
+
   } finally {
     saveProductBtn.disabled = false;
     saveProductBtn.textContent = productId.value
@@ -340,13 +345,13 @@ productForm.addEventListener("submit", async function (event) {
 
 
 // ==========================================
-// LOAD ALL PRODUCTS
+// LOAD PRODUCTS
 // ==========================================
 
 async function loadProducts() {
   adminProductList.innerHTML = "<p>Loading products...</p>";
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("products")
     .select("*")
     .order("created_at", { ascending: false });
@@ -373,9 +378,6 @@ async function loadProducts() {
     const image = document.createElement("img");
     image.src = product.image_urls?.[0] || "";
     image.alt = product.name;
-    image.onerror = function () {
-      this.style.display = "none";
-    };
 
     const info = document.createElement("div");
     info.className = "admin-product-info";
@@ -394,12 +396,16 @@ async function loadProducts() {
     const editButton = document.createElement("button");
     editButton.className = "edit-btn";
     editButton.textContent = "Edit";
-    editButton.addEventListener("click", () => editProduct(product.id));
+    editButton.addEventListener("click", () => {
+      editProduct(product.id);
+    });
 
     const deleteButton = document.createElement("button");
     deleteButton.className = "delete-btn";
     deleteButton.textContent = "Delete";
-    deleteButton.addEventListener("click", () => deleteProduct(product.id));
+    deleteButton.addEventListener("click", () => {
+      deleteProduct(product.id);
+    });
 
     item.append(image, info, editButton, deleteButton);
     adminProductList.appendChild(item);
@@ -435,7 +441,7 @@ function editProduct(id) {
 
   showMessage(
     productMessage,
-    "Editing product. Leave image fields empty to keep the existing images."
+    "Leave image fields empty to keep existing images."
   );
 
   productForm.scrollIntoView({
@@ -460,7 +466,7 @@ async function deleteProduct(id) {
 
   if (!confirmed) return;
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from("products")
     .delete()
     .eq("id", id);
@@ -476,7 +482,7 @@ async function deleteProduct(id) {
 
 
 // ==========================================
-// RESET PRODUCT FORM
+// RESET FORM
 // ==========================================
 
 function resetProductForm() {
@@ -488,7 +494,7 @@ function resetProductForm() {
   cancelEditBtn.hidden = true;
 }
 
-cancelEditBtn.addEventListener("click", function () {
+cancelEditBtn.addEventListener("click", function() {
   resetProductForm();
   showMessage(productMessage, "");
 });
