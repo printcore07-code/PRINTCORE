@@ -4,83 +4,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#101010">
-  <title>PRINTCORE | Premium Wall Posters</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Shop posters at PRINTCORE.">
+  <title>PRINTCORE | Poster Store</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script defer src="store.js"></script>
 </head>
+
 <body>
 
-<header class="site-header">
-  <a class="logo" href="index.html">PRINT<span>CORE</span></a>
-
-  <nav class="desktop-nav">
-    <a href="#home">Home</a>
-    <a href="#products">Shop</a>
-    <a href="#about">About</a>
-  </nav>
-
-  <a href="admin.html" class="admin-link">ADMIN</a>
-</header>
-
-<main>
-  <section class="hero" id="home">
-    <div class="hero-content">
-      <span class="eyebrow">YOUR WALL. YOUR STYLE.</span>
-      <h1>MAKE YOUR<br><span>WALLS ICONIC.</span></h1>
-      <p>Premium posters for people who love extraordinary designs.</p>
-      <a href="#products" class="primary-btn">EXPLORE COLLECTION <span>→</span></a>
-    </div>
-    <div class="hero-decoration">PC.</div>
-  </section>
-
-  <section class="category-section">
-    <div class="section-heading">
-      <div>
-        <span class="eyebrow">FIND YOUR STYLE</span>
-        <h2>SHOP BY CATEGORY</h2>
-      </div>
-    </div>
-    <div class="category-list" id="categoryList">
-      <button class="category-chip active" data-category="All">All Posters</button>
-      <button class="category-chip" data-category="Car Posters">Car Posters</button>
-      <button class="category-chip" data-category="Bike Posters">Bike Posters</button>
-      <button class="category-chip" data-category="Movie Posters">Movie Posters</button>
-      <button class="category-chip" data-category="Wall Posters">Wall Posters</button>
-      <button class="category-chip" data-category="Custom Posters">Custom Posters</button>
-    </div>
-  </section>
-
-  <section class="products-section" id="products">
-    <div class="section-heading">
-      <div>
-        <span class="eyebrow">THE PRINTCORE COLLECTION</span>
-        <h2>OUR PRODUCTS<span class="orange-dot">.</span></h2>
-      </div>
-      <span id="productCount" class="product-count"></span>
-    </div>
+  <header class="site-header">
+    <a class="logo" href="index.html">PRINT<span>CORE</span></a>
 
     <div class="search-wrap">
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search posters..."
+        aria-label="Search products">
       <span>⌕</span>
-      <input type="search" id="searchInput" placeholder="Search posters...">
     </div>
 
-    <div id="productGrid" class="product-grid">
-      <div class="loading-message">Loading our collection...</div>
+    <a class="admin-link" href="admin.html">Admin</a>
+  </header>
+
+  <main>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+      <div>
+        <p class="eyebrow">MAKE YOUR WALL YOURS</p>
+
+        <h1>
+          Posters that make<br>
+          your space <em>personal.</em>
+        </h1>
+
+        <p>Discover designs made to stand out.</p>
+
+        <a class="button light" href="#shop">
+          Explore collection
+        </a>
+      </div>
+
+      <div class="hero-art">
+        <div class="poster poster-one">
+          DRIVE<br>YOUR<br>DREAMS
+        </div>
+
+        <div class="poster poster-two">
+          ART<br>IS<br>EVERYWHERE
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOP SECTION -->
+    <section class="section" id="shop">
+
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">FIND YOUR STYLE</p>
+          <h2>Shop by category</h2>
+        </div>
+      </div>
+
+      <!-- SIX CATEGORIES -->
+      <nav class="categories" id="categories">
+
+        <button class="category active" data-category="All">
+          All products
+        </button>
+
+        <button class="category" data-category="Car Posters">
+          Car Posters
+        </button>
+
+        <button class="category" data-category="Wall Posters">
+          Wall Posters
+        </button>
+
+        <button class="category" data-category="Supercar Posters">
+          Supercar Posters
+        </button>
+
+        <button class="category" data-category="Bike Posters">
+          Bike Posters
+        </button>
+
+        <button class="category" data-category="Movie Posters">
+          Movie Posters
+        </button>
+
+        <button class="category" data-category="Custom Posters">
+          Custom Posters
+        </button>
+
+      </nav>
+
+      <!-- PRODUCTS -->
+      <div class="result-line">
+        <h2>Our products</h2>
+        <span id="productCount">Loading products…</span>
+      </div>
+
+      <div class="product-grid" id="productGrid">
+        <div class="loading">Loading products…</div>
+      </div>
+
+      <p class="empty hidden" id="emptyState">
+        No products found. Please try another search or category.
+      </p>
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <a class="logo" href="#">
+      PRINT<span>CORE</span>
+    </a>
+
+    <p>Posters for the spaces you love.</p>
+
+    <small>
+      © <span id="year"></span> PRINTCORE
+    </small>
+  </footer>
+
+  <!-- PRODUCT DETAILS POPUP -->
+  <div
+    class="modal hidden"
+    id="productModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalName">
+
+    <button
+      class="modal-backdrop"
+      id="closeBackdrop"
+      aria-label="Close product details">
+    </button>
+
+    <div class="modal-panel">
+
+      <button
+        class="modal-close"
+        id="closeModal"
+        aria-label="Close">
+        ×
+      </button>
+
+      <!-- PRODUCT IMAGE GALLERY -->
+      <div class="modal-gallery">
+
+        <div class="main-image-wrap">
+          <img id="mainProductImage" alt="Product image">
+        </div>
+
+        <div class="thumbnails" id="thumbnails"></div>
+
+      </div>
+
+      <!-- PRODUCT INFORMATION -->
+      <div class="modal-info">
+
+        <p class="eyebrow" id="modalCategory"></p>
+
+        <h2 id="modalName"></h2>
+
+        <div class="price-line">
+          <strong id="modalPrice"></strong>
+          <del id="modalOldPrice"></del>
+        </div>
+
+        <p id="modalDescription"></p>
+
+        <div class="specifications" id="modalSpecs"></div>
+
+        <button class="button primary buy-button" id="buyNow">
+          Buy now on WhatsApp <span>↗</span>
+        </button>
+
+        <small class="secure-note">
+          Your order message will open in WhatsApp for you to send.
+        </small>
+
+      </div>
+
     </div>
-  </section>
+  </div>
 
-  <section class="about-section" id="about">
-    <span class="eyebrow">ABOUT PRINTCORE</span>
-    <h2>TURN EMPTY WALLS<br>INTO <span>STATEMENTS.</span></h2>
-    <p>Discover poster designs inspired by cars, bikes, movies and everything you love.</p>
-  </section>
-</main>
-
-<footer class="site-footer">
-  <a class="logo" href="index.html">PRINT<span>CORE</span></a>
-  <p>© 2026 PRINTCORE. All rights reserved.</p>
-</footer>
-
-<script type="module" src="store.js"></script>
 </body>
 </html>
