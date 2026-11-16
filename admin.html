@@ -4,154 +4,208 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#101010">
-  <title>PRINTCORE | Admin Panel</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>PRINTCORE Admin Panel</title>
+
+  <link rel="stylesheet" href="admin.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js" defer></script>
 </head>
-<body class="admin-page">
 
-<div class="admin-container">
+<body>
 
-  <div class="admin-top">
-    <a class="logo" href="index.html">PRINT<span>CORE</span></a>
-    <a href="index.html" class="secondary-btn">VIEW STORE</a>
-  </div>
+  <header class="admin-header">
+    <h1>PRINTCORE <span>ADMIN</span></h1>
+    <a href="index.html">View Store</a>
+  </header>
 
-  <section id="loginSection" class="admin-panel">
-    <h2>ADMIN LOGIN</h2>
-    <p class="product-description">Login with your authorised admin account.</p>
+  <main class="admin-container">
 
-    <form id="loginForm">
-      <div class="form-grid">
-        <div class="form-field full">
-          <label for="email">Email address</label>
-          <input type="email" id="email" required autocomplete="username">
+    <!-- LOGIN SECTION -->
+    <section id="loginSection" class="admin-card">
+      <h2>Admin Login</h2>
+      <p>Log in to manage your store products.</p>
+
+      <form id="loginForm">
+        <label>Email Address</label>
+        <input
+          type="email"
+          id="adminEmail"
+          placeholder="Enter admin email"
+          required
+        >
+
+        <label>Password</label>
+        <input
+          type="password"
+          id="adminPassword"
+          placeholder="Enter password"
+          required
+        >
+
+        <button type="submit" class="admin-btn">
+          Login
+        </button>
+
+        <p id="loginMessage"></p>
+      </form>
+    </section>
+
+
+    <!-- ADMIN DASHBOARD -->
+    <section id="dashboardSection" hidden>
+
+      <div class="dashboard-heading">
+        <div>
+          <h2>Product Management</h2>
+          <p>Add, edit and manage your products.</p>
         </div>
 
-        <div class="form-field full">
-          <label for="password">Password</label>
-          <input type="password" id="password" required autocomplete="current-password">
-        </div>
+        <button id="logoutBtn" class="logout-btn">
+          Logout
+        </button>
       </div>
 
-      <div class="form-actions">
-        <button class="action-btn" type="submit">LOGIN</button>
-      </div>
-      <p id="loginMessage" class="message"></p>
-    </form>
-  </section>
 
-  <section id="dashboard" hidden>
+      <!-- ADD / EDIT PRODUCT FORM -->
+      <section class="admin-card">
 
-    <div class="admin-top">
-      <div>
-        <span class="eyebrow">PRINTCORE MANAGEMENT</span>
-        <h1>ADMIN DASHBOARD</h1>
-      </div>
-      <button id="logoutButton" class="secondary-btn" type="button">LOGOUT</button>
-    </div>
+        <h2 id="formTitle">Add New Product</h2>
 
-    <section class="admin-panel">
-      <h2>WHATSAPP SETTINGS</h2>
-      <form id="settingsForm">
-        <div class="form-field">
-          <label for="whatsappNumber">WhatsApp number (with country code)</label>
+        <form id="productForm">
+
+          <input type="hidden" id="productId">
+
+          <label>Product Name</label>
           <input
-            type="tel"
-            id="whatsappNumber"
-            placeholder="919876543210"
+            type="text"
+            id="productName"
+            placeholder="Example: BMW M5 Poster"
             required
           >
-        </div>
-        <div class="form-actions">
-          <button class="action-btn" type="submit">SAVE NUMBER</button>
-        </div>
-        <p id="settingsMessage" class="message"></p>
-      </form>
-    </section>
 
-    <section class="admin-form">
-      <h2 id="productFormTitle">ADD NEW PRODUCT</h2>
+          <label>Product Category</label>
+          <select id="productCategory" required>
+            <option value="">Select Category</option>
+            <option value="Car Posters">Car Posters</option>
+            <option value="Wall Posters">Wall Posters</option>
+            <option value="Supercar Posters">Supercar Posters</option>
+            <option value="Bike Posters">Bike Posters</option>
+            <option value="Movie Posters">Movie Posters</option>
+            <option value="Custom Posters">Custom Posters</option>
+          </select>
 
-      <form id="productForm">
-        <input type="hidden" id="productId">
+          <div class="form-row">
+            <div>
+              <label>Product Price (₹)</label>
+              <input
+                type="number"
+                id="productPrice"
+                placeholder="499"
+                min="0"
+                required
+              >
+            </div>
 
-        <div class="form-grid">
-
-          <div class="form-field">
-            <label for="productName">Product name</label>
-            <input type="text" id="productName" required>
+            <div>
+              <label>Old Price (₹)</label>
+              <input
+                type="number"
+                id="productOldPrice"
+                placeholder="699"
+                min="0"
+              >
+            </div>
           </div>
 
-          <div class="form-field">
-            <label for="productPrice">Price (₹)</label>
-            <input type="number" id="productPrice" min="0" step="0.01" required>
+          <label>Product Description</label>
+          <textarea
+            id="productDescription"
+            placeholder="Write product details..."
+            rows="4"
+          ></textarea>
+
+          <label>Specifications</label>
+          <textarea
+            id="productSpecifications"
+            placeholder="Example: A3 Size, Premium Quality, Matte Finish"
+            rows="3"
+          ></textarea>
+
+          <label>Product WhatsApp Number</label>
+          <input
+            type="tel"
+            id="productWhatsapp"
+            placeholder="Example: 919876543210"
+          >
+          <small>
+            Include country code without +. Leave empty to use the
+            default store WhatsApp number.
+          </small>
+
+          <div class="image-upload-section">
+            <h3>Product Images</h3>
+            <p>You can upload up to 4 images for each product.</p>
+
+            <label>Image 1 (Main Image)</label>
+            <input type="file" id="image1" accept="image/*">
+
+            <label>Image 2</label>
+            <input type="file" id="image2" accept="image/*">
+
+            <label>Image 3</label>
+            <input type="file" id="image3" accept="image/*">
+
+            <label>Image 4</label>
+            <input type="file" id="image4" accept="image/*">
+
+            <p class="image-note">
+              When editing a product, leave image fields empty
+              to keep the existing images.
+            </p>
           </div>
 
-          <div class="form-field full">
-            <label for="productCategory">Category</label>
-            <select id="productCategory" required>
-              <option value="Wall Posters">Wall Posters</option>
-              <option value="Car Posters">Car Posters</option>
-              <option value="Bike Posters">Bike Posters</option>
-              <option value="Movie Posters">Movie Posters</option>
-              <option value="Supercar Posters">Supercar Posters</option>
-              <option value="Custom Posters">Custom Posters</option>
-            </select>
+          <div class="form-buttons">
+            <button type="submit" id="saveProductBtn" class="admin-btn">
+              Add Product
+            </button>
+
+            <button
+              type="button"
+              id="cancelEditBtn"
+              class="cancel-btn"
+              hidden
+            >
+              Cancel Edit
+            </button>
           </div>
 
-          <div class="form-field">
-            <label for="productImage1">Main image (required for new products)</label>
-            <input type="file" id="productImage1" accept="image/*">
-          </div>
+          <p id="productMessage"></p>
 
-          <div class="form-field">
-            <label for="productImage2">Second image (optional)</label>
-            <input type="file" id="productImage2" accept="image/*">
-          </div>
+        </form>
+      </section>
 
-          <div class="form-field full">
-            <label for="productImage3">Third image (optional)</label>
-            <input type="file" id="productImage3" accept="image/*">
-          </div>
 
-          <div class="form-field full">
-            <label for="productDescription">Description</label>
-            <textarea id="productDescription" placeholder="Describe your poster..."></textarea>
-          </div>
+      <!-- PRODUCT LIST -->
+      <section class="admin-card">
 
-          <div class="form-field full">
-            <label class="check-row">
-              <input type="checkbox" id="productActive" checked>
-              Show this product on the website
-            </label>
-          </div>
-
-        </div>
-
-        <div class="form-actions">
-          <button class="action-btn" id="saveProductButton" type="submit">
-            SAVE PRODUCT
+        <div class="product-list-heading">
+          <h2>Existing Products</h2>
+          <button type="button" id="refreshProductsBtn">
+            Refresh
           </button>
-          <button class="secondary-btn" id="cancelEditButton" type="button" hidden>
-            CANCEL EDIT
-          </button>
         </div>
 
-        <p id="productMessage" class="message"></p>
-      </form>
+        <div id="adminProductList">
+          <p>Loading products...</p>
+        </div>
+
+      </section>
+
     </section>
 
-    <section class="admin-panel">
-      <h2>YOUR PRODUCTS</h2>
-      <div id="adminProductList" class="admin-product-list">
-        Loading products...
-      </div>
-    </section>
+  </main>
 
-  </section>
-</div>
-
-<script type="module" src="admin.js"></script>
 </body>
 </html>
